@@ -56,6 +56,15 @@
                 android:text="一对一视频聊天"
                 tools:ignore="OnClick" />
 
+            <Button
+                android:id="@+id/button3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:onClick="JoinRoomTwoVideo"
+                android:text="看看need"
+                tools:ignore="OnClick" />
+
         </LinearLayout>
     </ScrollView>
 

@@ -1,5 +1,6 @@
 package com.dds.nodejs;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -7,6 +8,7 @@ import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.dds.PhotoActivity;
 import com.dds.webrtc.R;
 
 
@@ -51,6 +53,10 @@ public class NodejsActivity extends AppCompatActivity {
     public void JoinRoom(View view) {
         WebrtcUtil.call(this, et_signal.getText().toString(), et_room.getText().toString().trim());
 
+    }
+
+    public void JoinRoomTwoVideo(View view) {
+        startActivity(new Intent(this, PhotoActivity.class));
     }
 
 

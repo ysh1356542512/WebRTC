@@ -11,6 +11,7 @@
 package org.webrtc;
 
 import android.annotation.TargetApi;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
@@ -44,6 +45,7 @@ import javax.microedition.khronos.egl.EGLContext;
  */
 public class SurfaceTextureHelper {
   private static final String TAG = "SurfaceTextureHelper";
+
   /**
    * Construct a new SurfaceTextureHelper sharing OpenGL resources with |sharedContext|. A dedicated
    * thread and handler is created for handling the SurfaceTexture. May return null if EGL fails to
@@ -56,6 +58,7 @@ public class SurfaceTextureHelper {
   public static SurfaceTextureHelper create(final String threadName,
       final EglBase.Context sharedContext, boolean alignTimestamps,
       final YuvConverter yuvConverter) {
+
     final HandlerThread thread = new HandlerThread(threadName);
     thread.start();
     final Handler handler = new Handler(thread.getLooper());
@@ -333,10 +336,21 @@ public class SurfaceTextureHelper {
 //    final VideoFrame frame = new VideoFrame(buffer, frameRotation, timestampNs);
     final VideoFrame frame = new VideoFrame(buffer, 180, timestampNs);
 
+    long start = System.currentTimeMillis();
     Bitmap bitmap = GetBitmapFromVideoFrame(frame);
 
-    VideoFrame newFrame = GetVideoFrameFromBitmap(bitmap, timestampNs);
+    if (num == 100) {
+      StoreBitmap.bitmap = bitmap;
+      StoreBitmap.bitmap2 = TFLiteOwner.tfLiteDetector.detect3(bitmap);
+    }
+    num++;
+    long tf_start = System.currentTimeMillis();
+    bitmap = TFLiteOwner.tfLiteDetector.detect3(bitmap);
+    Log.d(TAG, "tryDeliverTextureFrame: model run "+(System.currentTimeMillis()-tf_start)+"ms");
+    Log.d(TAG, "tryDeliverTextureFrame: bitmap width"+bitmap.getWidth()+"bitmap height"+bitmap.getHeight());
 
+    VideoFrame newFrame = GetVideoFrameFromBitmap(bitmap, timestampNs+System.currentTimeMillis()-start);
+    Log.d(TAG, "tryDeliverTextureFrame: waste time" + (System.currentTimeMillis() - start));
 
     ((VideoSink) listener).onFrame(newFrame);
 //    ((VideoSink) listener).onFrame(frame);
@@ -366,7 +380,7 @@ public class SurfaceTextureHelper {
 //    TextureBufferImpl buffer = new TextureBufferImpl(bitmap.getWidth(), bitmap.getHeight(), VideoFrame.TextureBuffer.Type.RGB, textures[0], new Matrix(), SurfaceTextureHelper.getHandler(), yuvConverter, null);
 //    VideoFrame.I420Buffer i420Buf = yuvConverter.convert(buffer);
     long frameTime = System.nanoTime() - start;
-    VideoFrame newFrame = new VideoFrame(buffer, 180, frameTime) ;
+    VideoFrame newFrame = new VideoFrame(buffer, 180, timestampNs) ;
     return newFrame;
   }
 
@@ -383,6 +397,8 @@ public class SurfaceTextureHelper {
         initializeEGL();
         bitmapTextureFramebuffer =
                 new GlTextureFrameBuffer(GLES20.GL_RGBA);
+//        bitmapTextureFramebuffer =
+//                new GlTextureFrameBuffer(GLES20.GL_RGB);
         frameDrawer = new VideoFrameDrawer();
         drawer = new GlRectDrawer();
       }
@@ -398,6 +414,8 @@ public class SurfaceTextureHelper {
 
       final int scaledWidth = (int) (1 * frame.getRotatedWidth());
       final int scaledHeight = (int) (1 * frame.getRotatedHeight());
+//      final int scaledWidth = (int) (1 * frame.getRotatedHeight());
+//      final int scaledHeight = (int) (1 * frame.getRotatedWidth());
 
 
       bitmapTextureFramebuffer.setSize(scaledWidth, scaledHeight);
